@@ -92,8 +92,8 @@ def read_image_sequence_frames(image_sequence_path, process_length, target_fps, 
         raise ValueError(f"No images found in the directory: {image_sequence_path}")
 
     # Optionally limit to process_length
-    if process_length > 0:
-        image_files = image_files[:process_length]
+    # if process_length > 0:
+    #     image_files = image_files[:process_length]
 
     # Read and preprocess images
     frames = []
