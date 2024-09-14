@@ -57,7 +57,7 @@ class DepthCrafterDemo:
         guidance_scale: float,
         save_folder: str = "./demo_output",
         window_size: int = 110,
-        process_length: int = 195,
+        process_length: int = None,  # Change to None
         overlap: int = 25,
         max_res: int = 1024,
         target_fps: int = 15,
@@ -78,6 +78,10 @@ class DepthCrafterDemo:
             )
         else:
             raise ValueError(f"Unknown input type: {input_type}")
+
+        # Determine process_length if not provided
+        if process_length is None:
+            process_length = len(frames)
 
         print(f"==> Input path: {input_path}, frames shape: {frames.shape}")
 
@@ -127,6 +131,7 @@ class DepthCrafterDemo:
             input_folder,
             num_denoising_steps,
             guidance_scale,
+            process_length=None,  # Pass None to infer method
         )
         # Clear the cache for the next input
         gc.collect()
@@ -198,7 +203,7 @@ if __name__ == "__main__":
         cpu_offload=args.cpu_offload,
     )
 
-    # Process the input(s)
+    # Process each input (can be multiple paths separated by commas)
     input_paths = args.input_path.split(",")
     for input_path in input_paths:
         depthcrafter_demo.infer(
@@ -207,7 +212,7 @@ if __name__ == "__main__":
             args.guidance_scale,
             save_folder=args.save_folder,
             window_size=args.window_size,
-            process_length=args.process_length,
+            process_length=None,  # Pass None to infer method
             overlap=args.overlap,
             max_res=args.max_res,
             target_fps=args.target_fps,
