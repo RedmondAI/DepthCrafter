@@ -92,8 +92,8 @@ class DepthCrafterDemo:
                 input_path, process_length, target_fps, max_res
             )
         elif input_type == "image_sequence":
-            frames, target_fps = read_image_sequence_frames(
-                input_path, process_length, target_fps, max_res
+            frames, original_sizes = read_image_sequence(
+                input_path, max_res
             )
         else:
             raise ValueError(f"Unknown input type: {input_type}")
@@ -115,7 +115,7 @@ class DepthCrafterDemo:
                 guidance_scale=guidance_scale,
                 num_inference_steps=num_denoising_steps,
                 window_size=window_size,
-                overlap=overlap,  # Added comma
+                overlap=overlap,
                 track_time=track_time,
             ).frames[0]
         # Convert the three-channel output to a single channel depth map
