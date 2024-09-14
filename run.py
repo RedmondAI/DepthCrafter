@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import argparse
 from diffusers.training_utils import set_seed
+import time
 
 from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
@@ -170,7 +171,7 @@ if __name__ == "__main__":
     parser.add_argument("--track_time", type=bool, default=False, help="Track time")
 
     args = parser.parse_args()
-
+    start_time = time.time()
     depthcrafter_demo = DepthCrafterDemo(
         unet_path=args.unet_path,
         pre_train_path=args.pre_train_path,
@@ -182,5 +183,8 @@ if __name__ == "__main__":
         args.guidance_scale,
         max_res=args.max_res,
     )
+    end_time = time.time()
+    print(f"Time taken: {end_time - start_time} seconds")
+    print("Time per frame: ", (end_time - start_time) / len(frames), " seconds")
     gc.collect()
     torch.cuda.empty_cache()
