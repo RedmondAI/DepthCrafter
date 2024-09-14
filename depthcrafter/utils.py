@@ -116,7 +116,7 @@ def read_image_sequence_frames(image_sequence_path, process_length, target_fps, 
 
         frame = cv2.resize(frame, (width, height))
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frames.append(frame.astype('float32') / 255.0)
+        frames.append(frame.astype('uint8'))
 
     frames = np.array(frames)
     return frames, target_fps
