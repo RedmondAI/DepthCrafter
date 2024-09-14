@@ -8,7 +8,7 @@ import time
 
 from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
-from depthcrafter.utils import vis_sequence_depth, read_image_sequence, save_png_sequence
+from depthcrafter.utils import vis_sequence_depth, read_image_sequence, save_png_sequence, read_image_sequence_frames
 
 class DepthCrafterDemo:
     def __init__(
@@ -52,23 +52,34 @@ class DepthCrafterDemo:
 
     def infer(
         self,
-        image_folder: str,
+        input_path: str,
         num_denoising_steps: int,
         guidance_scale: float,
         save_folder: str = "./demo_output",
         window_size: int = 110,
+        process_length: int = 195,
         overlap: int = 25,
         max_res: int = 1024,
         target_fps: int = 15,
         seed: int = 42,
         track_time: bool = True,
         save_npz: bool = False,
+        input_type: str = "video",
     ):
         set_seed(seed)
 
-        frames, original_sizes = read_image_sequence(image_folder, max_res)  # Capture original sizes
-        process_length = len(frames)
-        print(f"==> image folder: {image_folder}, number of frames: {process_length}")
+        if input_type == "video":
+            frames, target_fps = read_video_frames(
+                input_path, process_length, target_fps, max_res
+            )
+        elif input_type == "image_sequence":
+            frames, target_fps = read_image_sequence_frames(
+                input_path, process_length, target_fps, max_res
+            )
+        else:
+            raise ValueError(f"Unknown input type: {input_type}")
+
+        print(f"==> Input path: {input_path}, frames shape: {frames.shape}")
 
         # Inference the depth map using the DepthCrafter pipeline
         with torch.inference_mode():
@@ -91,12 +102,12 @@ class DepthCrafterDemo:
         vis = vis_sequence_depth(res)
         # Save the depth map and visualization as 16-bit PNGs
         save_path = os.path.join(
-            save_folder, os.path.basename(image_folder)
+            save_folder, os.path.basename(input_path)
         )
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        save_png_sequence(res, save_path + "_depth", original_sizes, dtype=np.float16)
-        save_png_sequence(vis, save_path + "_vis", original_sizes, dtype=np.float16)
-        save_png_sequence(frames, save_path + "_input", original_sizes, dtype=np.float16)
+        save_png_sequence(res, save_path + "_depth", frames.shape[1:3], dtype=np.float16)
+        save_png_sequence(vis, save_path + "_vis", frames.shape[1:3], dtype=np.float16)
+        save_png_sequence(frames, save_path + "_input", frames.shape[1:3], dtype=np.float16)
         return [
             save_path + "_input",
             save_path + "_vis",
@@ -126,7 +137,17 @@ if __name__ == "__main__":
     # Running configs
     parser = argparse.ArgumentParser(description="DepthCrafter")
     parser.add_argument(
-        "--image-folder", type=str, required=True, help="Path to the input image sequence folder"
+        "--input-path",
+        type=str,
+        required=True,
+        help="Path to the input video file(s) or image sequence directory"
+    )
+    parser.add_argument(
+        "--input-type",
+        type=str,
+        default="video",
+        choices=["video", "image_sequence"],
+        help="Type of input: 'video' or 'image_sequence'"
     )
     parser.add_argument(
         "--save-folder",
@@ -176,12 +197,29 @@ if __name__ == "__main__":
         pre_train_path=args.pre_train_path,
         cpu_offload=args.cpu_offload,
     )
-    depthcrafter_demo.run(
-        args.image_folder,
-        args.num_inference_steps,
-        args.guidance_scale,
-        max_res=args.max_res,
-    )
+
+    # Process the input(s)
+    input_paths = args.input_path.split(",")
+    for input_path in input_paths:
+        depthcrafter_demo.infer(
+            input_path,
+            args.num_inference_steps,
+            args.guidance_scale,
+            save_folder=args.save_folder,
+            window_size=args.window_size,
+            process_length=args.process_length,
+            overlap=args.overlap,
+            max_res=args.max_res,
+            target_fps=args.target_fps,
+            seed=args.seed,
+            track_time=args.track_time,
+            save_npz=args.save_npz,
+            input_type=args.input_type,
+        )
+        # Clear the cache for the next input
+        gc.collect()
+        torch.cuda.empty_cache()
+
     end_time = time.time()
     print(f"Time taken: {end_time - start_time} seconds")
     print("Time per frame: ", (end_time - start_time) / len(frames), " seconds")

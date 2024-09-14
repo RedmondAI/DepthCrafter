@@ -1,4 +1,5 @@
 import numpy as np
+import glob
 import cv2
 import matplotlib.cm as cm
 import torch
@@ -78,3 +79,44 @@ def vis_sequence_depth(depths: np.ndarray, v_min=None, v_max=None):
         v_max = depths.max()
     res = visualizer.apply(torch.tensor(depths), v_min=v_min, v_max=v_max).numpy()
     return res
+
+def read_image_sequence_frames(image_sequence_path, process_length, target_fps, max_res):
+    # Get a sorted list of image file paths
+    supported_formats = ('*.png', '*.jpg', '*.jpeg', '*.bmp', '*.tiff')
+    image_files = []
+    for ext in supported_formats:
+        image_files.extend(glob.glob(os.path.join(image_sequence_path, ext)))
+    image_files = sorted(image_files)
+    
+    if not image_files:
+        raise ValueError(f"No images found in the directory: {image_sequence_path}")
+
+    # Optionally limit to process_length
+    if process_length > 0:
+        image_files = image_files[:process_length]
+
+    # Read and preprocess images
+    frames = []
+    for img_path in image_files:
+        frame = cv2.imread(img_path)
+        if frame is None:
+            print(f"Warning: Unable to read image {img_path}, skipping.")
+            continue  # Skip if frame is not read correctly
+
+        original_height, original_width = frame.shape[:2]
+
+        # Resize frame if necessary
+        if max(original_height, original_width) > max_res:
+            scale = max_res / max(original_height, original_width)
+            height = int(round(original_height * scale / 64) * 64)
+            width = int(round(original_width * scale / 64) * 64)
+        else:
+            height = int(round(original_height / 64) * 64)
+            width = int(round(original_width / 64) * 64)
+
+        frame = cv2.resize(frame, (width, height))
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frames.append(frame.astype('float32') / 255.0)
+
+    frames = np.array(frames)
+    return frames, target_fps
