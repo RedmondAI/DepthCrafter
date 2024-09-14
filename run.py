@@ -26,6 +26,16 @@ def read_video_frames(input_path, process_length, target_fps, max_res):
     frames = np.array(frames)
     return frames, target_fps
 
+def get_frame_length(input_path: str) -> int:
+    """
+    Quickly count the number of image files in the input directory.
+    """
+    supported_formats = ('.png', '.jpg', '.jpeg', '.bmp', '.tiff')
+    return len([
+        fname for fname in os.listdir(input_path)
+        if fname.lower().endswith(supported_formats)
+    ])
+
 class DepthCrafterDemo:
     def __init__(
         self,
@@ -243,8 +253,12 @@ if __name__ == "__main__":
         torch.cuda.empty_cache()
 
     end_time = time.time()
+    try:
+        frame_length = get_frame_length(input_path)
+    except:
+        frame_length = 1
     print(f"Time taken: {end_time - start_time} seconds")
-    print("Time per frame: ", (end_time - start_time) / len(frames), " seconds")
+    print("Time per frame: ", (end_time - start_time) / frame_length, " seconds")
     gc.collect()
     torch.cuda.empty_cache()
 
