@@ -12,6 +12,7 @@ def read_image_sequence(folder_path: str, max_res: int):
     ])
     frames = []
     original_sizes = []
+    target_width, target_height = None, None  # Initialize target dimensions
     for img_path in image_files:
         img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
         if img.dtype != np.float32:
@@ -20,14 +21,20 @@ def read_image_sequence(folder_path: str, max_res: int):
         original_height, original_width = img.shape[:2]
         original_sizes.append((original_width, original_height))
         scale = min(max_res / original_height, max_res / original_width, 1)
-        # Ensure dimensions are divisible by 16
-        factor = 16  # Adjust based on network's downsampling layers
+        factor = 16  # Ensure dimensions are divisible by 16
         new_width = (int(original_width * scale) // factor) * factor
         new_height = (int(original_height * scale) // factor) * factor
+
+        # Set target dimensions based on the first image
+        if target_width is None and target_height is None:
+            target_width, target_height = new_width, new_height
+        else:
+            # Ensure all images are resized to the target dimensions
+            new_width, new_height = target_width, target_height
+
         new_size = (new_width, new_height)
         img = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA)
         frames.append(img)
-        print(f"Resized image dimensions: {new_width} x {new_height}")
     frames = np.array(frames)
     return frames, original_sizes
 
