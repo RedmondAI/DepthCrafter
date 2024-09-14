@@ -4,38 +4,43 @@ import cv2
 import matplotlib.cm as cm
 import torch
 import os
-from typing import List
+from typing import List, Tuple
 
-def read_image_sequence(folder_path: str, max_res: int):
+def read_image_sequence(folder_path: str, max_res: int) -> Tuple[np.ndarray, List[Tuple[int, int]]]:
     image_files = sorted([
         os.path.join(folder_path, img) for img in os.listdir(folder_path)
         if img.lower().endswith(('.png', '.jpg', '.jpeg'))
     ])
     frames = []
     original_sizes = []
-    target_width, target_height = None, None  # Initialize target dimensions
     for img_path in image_files:
         img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+        if img is None:
+            print(f"Warning: Unable to read image {img_path}, skipping.")
+            continue
         if img.dtype != np.float32:
             img = img.astype("float32") / 255.0
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
         original_height, original_width = img.shape[:2]
-        original_sizes.append((original_width, original_height))
-        scale = min(max_res / original_height, max_res / original_width, 1)
-        factor = 16  # Ensure dimensions are divisible by 16
-        new_width = (int(original_width * scale) // factor) * factor
-        new_height = (int(original_height * scale) // factor) * factor
-
-        # Set target dimensions based on the first image
-        if target_width is None and target_height is None:
-            target_width, target_height = new_width, new_height
+        original_sizes.append((original_width, original_height))  # Collect original sizes
+        
+        # Resize frame if necessary to be multiples of 64
+        if max(original_height, original_width) > max_res:
+            scale = max_res / max(original_height, original_width)
+            height = int(round(original_height * scale / 64) * 64)
+            width = int(round(original_width * scale / 64) * 64)
         else:
-            # Ensure all images are resized to the target dimensions
-            new_width, new_height = target_width, target_height
-
-        new_size = (new_width, new_height)
-        img = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA)
-        frames.append(img)
+            height = int(round(original_height / 64) * 64)
+            width = int(round(original_width / 64) * 64)
+        
+        # Ensure dimensions are at least 64
+        height = max(height, 64)
+        width = max(width, 64)
+        
+        frame = cv2.resize(img, (width, height))
+        frames.append(frame.astype('uint8'))
+    
     frames = np.array(frames)
     return frames, original_sizes
 
