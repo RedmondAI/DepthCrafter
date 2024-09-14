@@ -8,7 +8,7 @@ import time
 
 from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
-from depthcrafter.utils import vis_sequence_depth, save_video, read_video_frames, read_image_sequence, save_png_sequence
+from depthcrafter.utils import vis_sequence_depth, read_image_sequence, save_png_sequence
 
 class DepthCrafterDemo:
     def __init__(
