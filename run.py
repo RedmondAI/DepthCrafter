@@ -6,6 +6,7 @@ import argparse
 from diffusers.training_utils import set_seed
 import time
 from typing import List
+import shutil
 
 from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
@@ -140,8 +141,8 @@ class DepthCrafterDemo:
         )
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         save_png_sequence(res, save_path + "_depth", original_sizes, dtype=np.float16)
-        save_png_sequence(vis, save_path + "_vis", original_sizes, dtype=np.float16)
-        save_png_sequence(frames, save_path + "_input", original_sizes, dtype=np.float16)
+        # save_png_sequence(vis, save_path + "_vis", original_sizes, dtype=np.float16)
+        # save_png_sequence(frames, save_path + "_input", original_sizes, dtype=np.float16)
         return [
             save_path + "_input",
         ]
@@ -262,5 +263,35 @@ if __name__ == "__main__":
     gc.collect()
     torch.cuda.empty_cache()
 
-    # python run.py  --input-path input/scene_00045 --input-type image_sequence --save-folder ./demo_output --guidance-scale 1.2 --max-res 1920 --window-size 50  --overlap 15 --num-inference-steps 35 --target-fps 24 
+    # Empty the output directory before running inference
+
+    if os.path.exists(args.save_folder):
+        shutil.rmtree(args.save_folder)
+    os.makedirs(args.save_folder, exist_ok=True)
+
+    # Create high-quality mp4 from sorted PNGs
+    import subprocess
+    from glob import glob
+
+    # Get sorted list of PNGs
+    png_files = sorted(glob(os.path.join(args.save_folder, "*.png")))
+
+    # Write the list to a temporary file for ffmpeg
+    list_file = os.path.join(args.save_folder, "file_list.txt")
+    with open(list_file, "w") as f:
+        for png in png_files:
+            f.write(f"file '{png}'\n")
+
+    # Generate MP4 using ffmpeg with the sorted PNGs
+    output_mp4 = os.path.join(args.save_folder, "output.mp4")
+    subprocess.run([
+        "ffmpeg",
+        "-r", "24",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", list_file,
+        "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
+        output_mp4
+    ])
 
