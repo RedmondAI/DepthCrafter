@@ -18,8 +18,18 @@ def read_image_sequence(folder_path: str, max_res: int) -> Tuple[np.ndarray, Lis
         if img is None:
             print(f"Warning: Unable to read image {img_path}, skipping.")
             continue
-        if img.dtype != np.uint8:
-            img = (img.astype("float32") / 255.0 * 255).astype(np.uint8)
+
+        # Convert image to float32 scaled to [0.0, 1.0]
+        if img.dtype == np.uint8:
+            img = img.astype(np.float32) / 255.0
+        elif img.dtype == np.uint16:
+            img = img.astype(np.float32) / 65535.0
+        elif img.dtype == np.float32:
+            img = np.clip(img, 0.0, 1.0)
+        else:
+            print(f"Warning: Unexpected image dtype {img.dtype} in {img_path}, skipping.")
+            continue
+
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
         original_height, original_width = img.shape[:2]
@@ -38,10 +48,10 @@ def read_image_sequence(folder_path: str, max_res: int) -> Tuple[np.ndarray, Lis
         height = max(height, 64)
         width = max(width, 64)
         
-        frame = cv2.resize(img, (width, height))
+        frame = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
         frames.append(frame)
     
-    frames = np.array(frames)
+    frames = np.array(frames, dtype=np.float32)
     return frames, original_sizes
 
 def save_png_sequence(frames: np.ndarray, save_path_prefix: str, original_sizes: List[tuple], dtype=np.float16):
