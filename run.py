@@ -10,6 +10,21 @@ from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
 from depthcrafter.utils import vis_sequence_depth, read_image_sequence, save_png_sequence, read_image_sequence_frames
 
+def read_video_frames(input_path, process_length, target_fps, max_res):
+    # Placeholder implementation for reading video frames
+    # You need to replace this with actual video reading logic
+    import cv2
+    cap = cv2.VideoCapture(input_path)
+    frames = []
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frames.append(frame)
+    cap.release()
+    frames = np.array(frames)
+    return frames, target_fps
+
 class DepthCrafterDemo:
     def __init__(
         self,
