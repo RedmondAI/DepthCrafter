@@ -224,6 +224,11 @@ if __name__ == "__main__":
     parser.add_argument("--track_time", type=bool, default=False, help="Track time")
 
     args = parser.parse_args()
+
+    if os.path.exists(args.save_folder):
+        shutil.rmtree(args.save_folder)
+    os.makedirs(args.save_folder, exist_ok=True)
+
     start_time = time.time()
     depthcrafter_demo = DepthCrafterDemo(
         unet_path=args.unet_path,
@@ -265,9 +270,7 @@ if __name__ == "__main__":
 
     # Empty the output directory before running inference
 
-    if os.path.exists(args.save_folder):
-        shutil.rmtree(args.save_folder)
-    os.makedirs(args.save_folder, exist_ok=True)
+
 
     # Create high-quality mp4 from sorted PNGs
     import subprocess
