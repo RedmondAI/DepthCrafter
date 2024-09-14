@@ -18,8 +18,8 @@ def read_image_sequence(folder_path: str, max_res: int) -> Tuple[np.ndarray, Lis
         if img is None:
             print(f"Warning: Unable to read image {img_path}, skipping.")
             continue
-        if img.dtype != np.float32:
-            img = img.astype("float32") / 255.0
+        if img.dtype != np.uint8:
+            img = (img.astype("float32") / 255.0 * 255).astype(np.uint8)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
         original_height, original_width = img.shape[:2]
@@ -39,7 +39,7 @@ def read_image_sequence(folder_path: str, max_res: int) -> Tuple[np.ndarray, Lis
         width = max(width, 64)
         
         frame = cv2.resize(img, (width, height))
-        frames.append(frame.astype('uint8'))
+        frames.append(frame)
     
     frames = np.array(frames)
     return frames, original_sizes
