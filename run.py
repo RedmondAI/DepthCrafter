@@ -283,7 +283,7 @@ if __name__ == "__main__":
     list_file = os.path.join(args.save_folder, "file_list.txt")
     with open(list_file, "w") as f:
         for png in png_files:
-            f.write(f"file '{png}'\n")
+            f.write(f"file '{os.path.abspath(png)}'\n")
 
     # Generate MP4 using ffmpeg with the sorted PNGs
     output_mp4 = os.path.join(args.save_folder, "output.mp4")
