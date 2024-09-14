@@ -70,7 +70,7 @@ class DepthCrafterDemo:
         process_length = len(frames)
         print(f"==> image folder: {image_folder}, number of frames: {process_length}")
 
-        # inference the depth map using the DepthCrafter pipeline
+        # Inference the depth map using the DepthCrafter pipeline
         with torch.inference_mode():
             res = self.pipe(
                 frames,
@@ -83,20 +83,20 @@ class DepthCrafterDemo:
                 overlap=overlap,
                 track_time=track_time,
             ).frames[0]
-        # convert the three-channel output to a single channel depth map
+        # Convert the three-channel output to a single channel depth map
         res = res.sum(-1) / res.shape[-1]
-        # normalize the depth map to [0, 1] across the whole sequence
+        # Normalize the depth map to [0, 1] across the whole sequence
         res = (res - res.min()) / (res.max() - res.min())
-        # visualize the depth map and save the results
+        # Visualize the depth map and save the results
         vis = vis_sequence_depth(res)
-        # save the depth map and visualization as 16-bit PNGs
+        # Save the depth map and visualization as 16-bit PNGs
         save_path = os.path.join(
             save_folder, os.path.basename(image_folder)
         )
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         save_png_sequence(res, save_path + "_depth", original_sizes, dtype=np.float16)
-        save_png_sequence(vis, save_path + "_vis", dtype=np.float16)
-        save_png_sequence(frames, save_path + "_input", dtype=np.float16)
+        save_png_sequence(vis, save_path + "_vis", original_sizes, dtype=np.float16)
+        save_png_sequence(frames, save_path + "_input", original_sizes, dtype=np.float16)
         return [
             save_path + "_input",
             save_path + "_vis",
@@ -110,20 +110,20 @@ class DepthCrafterDemo:
         guidance_scale,
         max_res=1024,
     ):
-        frames = read_image_sequence(input_folder, max_res)
+        frames, original_sizes = read_image_sequence(input_folder, max_res)  # Capture original sizes
         process_length = len(frames)
         res_path = self.infer(
             input_folder,
             num_denoising_steps,
             guidance_scale,
         )
-        # clear the cache for the next input
+        # Clear the cache for the next input
         gc.collect()
         torch.cuda.empty_cache()
         return res_path[:2]
 
 if __name__ == "__main__":
-    # running configs
+    # Running configs
     parser = argparse.ArgumentParser(description="DepthCrafter")
     parser.add_argument(
         "--image-folder", type=str, required=True, help="Path to the input image sequence folder"
