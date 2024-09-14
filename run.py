@@ -66,7 +66,7 @@ class DepthCrafterDemo:
     ):
         set_seed(seed)
 
-        frames = read_image_sequence(image_folder, max_res)
+        frames, original_sizes = read_image_sequence(image_folder, max_res)  # Capture original sizes
         process_length = len(frames)
         print(f"==> image folder: {image_folder}, number of frames: {process_length}")
 
@@ -94,7 +94,7 @@ class DepthCrafterDemo:
             save_folder, os.path.basename(image_folder)
         )
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        save_png_sequence(res, save_path + "_depth", dtype=np.float16)
+        save_png_sequence(res, save_path + "_depth", original_sizes, dtype=np.float16)
         save_png_sequence(vis, save_path + "_vis", dtype=np.float16)
         save_png_sequence(frames, save_path + "_input", dtype=np.float16)
         return [

@@ -18,7 +18,10 @@ def read_image_sequence(folder_path: str, max_res: int):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         original_height, original_width = img.shape[:2]
         scale = min(max_res / original_height, max_res / original_width, 1)
-        new_size = (int(original_width * scale), int(original_height * scale))
+        # Ensure dimensions are divisible by 8
+        new_width = (int(original_width * scale) // 8) * 8
+        new_height = (int(original_height * scale) // 8) * 8
+        new_size = (new_width, new_height)
         img = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA)
         frames.append(img)
     frames = np.array(frames)
