@@ -116,7 +116,6 @@ class DepthCrafterDemo:
             input_folder,
             num_denoising_steps,
             guidance_scale,
-            process_length=process_length,
         )
         # clear the cache for the next input
         gc.collect()
