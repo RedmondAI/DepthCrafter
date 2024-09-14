@@ -11,23 +11,25 @@ def read_image_sequence(folder_path: str, max_res: int):
         if img.lower().endswith(('.png', '.jpg', '.jpeg'))
     ])
     frames = []
-    original_sizes = []  # Initialize list to store original sizes
+    original_sizes = []
     for img_path in image_files:
         img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
         if img.dtype != np.float32:
             img = img.astype("float32") / 255.0
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         original_height, original_width = img.shape[:2]
-        original_sizes.append((original_width, original_height))  # Store original size
+        original_sizes.append((original_width, original_height))
         scale = min(max_res / original_height, max_res / original_width, 1)
-        # Ensure dimensions are divisible by 8
-        new_width = (int(original_width * scale) // 8) * 8
-        new_height = (int(original_height * scale) // 8) * 8
+        # Ensure dimensions are divisible by 16
+        factor = 16  # Adjust based on network's downsampling layers
+        new_width = (int(original_width * scale) // factor) * factor
+        new_height = (int(original_height * scale) // factor) * factor
         new_size = (new_width, new_height)
         img = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA)
         frames.append(img)
+        print(f"Resized image dimensions: {new_width} x {new_height}")
     frames = np.array(frames)
-    return frames, original_sizes  # Return original sizes alongside frames
+    return frames, original_sizes
 
 def save_png_sequence(frames: np.ndarray, save_path_prefix: str, original_sizes: List[tuple], dtype=np.float16):
     os.makedirs(os.path.dirname(save_path_prefix), exist_ok=True)
