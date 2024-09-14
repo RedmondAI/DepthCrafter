@@ -5,6 +5,7 @@ import torch
 import argparse
 from diffusers.training_utils import set_seed
 import time
+from typing import List
 
 from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
@@ -74,7 +75,7 @@ class DepthCrafterDemo:
         guidance_scale: float,
         save_folder: str = "./demo_output",
         window_size: int = 110,
-        process_length: int = None,  # Change to None
+        process_length: int = None,
         overlap: int = 25,
         max_res: int = 1024,
         target_fps: int = 15,
@@ -82,6 +83,7 @@ class DepthCrafterDemo:
         track_time: bool = True,
         save_npz: bool = False,
         input_type: str = "video",
+        original_sizes: List[tuple] = None,
     ):
         set_seed(seed)
 
@@ -113,7 +115,7 @@ class DepthCrafterDemo:
                 guidance_scale=guidance_scale,
                 num_inference_steps=num_denoising_steps,
                 window_size=window_size,
-                overlap=overlap,
+                overlap=overlap,  # Added comma
                 track_time=track_time,
             ).frames[0]
         # Convert the three-channel output to a single channel depth map
@@ -127,13 +129,11 @@ class DepthCrafterDemo:
             save_folder, os.path.basename(input_path)
         )
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        save_png_sequence(res, save_path + "_depth", frames.shape[1:3], dtype=np.float16)
-        save_png_sequence(vis, save_path + "_vis", frames.shape[1:3], dtype=np.float16)
-        save_png_sequence(frames, save_path + "_input", frames.shape[1:3], dtype=np.float16)
+        save_png_sequence(res, save_path + "_depth", original_sizes, dtype=np.float16)
+        save_png_sequence(vis, save_path + "_vis", original_sizes, dtype=np.float16)
+        save_png_sequence(frames, save_path + "_input", original_sizes, dtype=np.float16)
         return [
             save_path + "_input",
-            save_path + "_vis",
-            save_path + "_depth",
         ]
 
     def run(
@@ -149,11 +149,10 @@ class DepthCrafterDemo:
             input_folder,
             num_denoising_steps,
             guidance_scale,
-            process_length=None,  # Pass None to infer method
+            process_length=None,
+            original_sizes=original_sizes,
         )
-        # Clear the cache for the next input
         gc.collect()
-        torch.cuda.empty_cache()
         return res_path[:2]
 
 if __name__ == "__main__":
