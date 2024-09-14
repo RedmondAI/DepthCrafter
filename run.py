@@ -94,6 +94,7 @@ class DepthCrafterDemo:
         else:
             raise ValueError(f"Unknown input type: {input_type}")
 
+        print("frame length: ", len(frames))
         # Determine process_length if not provided
         if process_length is None:
             process_length = len(frames)
@@ -245,3 +246,6 @@ if __name__ == "__main__":
     print("Time per frame: ", (end_time - start_time) / len(frames), " seconds")
     gc.collect()
     torch.cuda.empty_cache()
+
+    # python run.py  --input-path input/scene_00045 --input-type image_sequence --save-folder ./demo_output --guidance-scale 1.2 --max-res 1920 --window-size 50  --overlap 15 --num-inference-steps 35 --target-fps 24 
+
