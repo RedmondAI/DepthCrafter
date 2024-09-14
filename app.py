@@ -9,19 +9,18 @@ from diffusers.training_utils import set_seed
 
 from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
-from depthcrafter.utils import read_video_frames, vis_sequence_depth, save_video
+from depthcrafter.utils import read_image_sequence, vis_sequence_depth, save_png_sequence
 from run import DepthCrafterDemo
 
 examples = [
-    ["examples/example_01.mp4", 25, 1.2, 1024, 195],
+    ["examples/images_example_01", 25, 1.2],
 ]
-
 
 def construct_demo():
     with gr.Blocks(analytics_enabled=False) as depthcrafter_iface:
         gr.Markdown(
             """
-            <div align='center'> <h1> DepthCrafter: Generating Consistent Long Depth Sequences for Open-world Videos </span> </h1> \
+            <div align='center'> <h1> DepthCrafter: Generating Consistent Long Depth Sequences for Open-world Images </span> </h1>
                         <h2 style='font-weight: 450; font-size: 1rem; margin: 0rem'>\
                         <a href='https://wbhu.github.io'>Wenbo Hu</a>, \
                         <a href='https://scholar.google.com/citations?user=qgdesEcAAAAJ&hl=en'>Xiangjun Gao</a>, \
@@ -47,72 +46,32 @@ def construct_demo():
 
         with gr.Row(equal_height=True):
             with gr.Column(scale=1):
-                input_video = gr.Video(label="Input Video")
+                input_folder = gr.Textbox(label="Input Image Folder", placeholder="Path to image sequence folder")
+                upload_btn = gr.File(label="Upload Images", file_count="multiple", file_types=[".png", ".jpg", ".jpeg"])
 
-            # with gr.Tab(label="Output"):
             with gr.Column(scale=2):
-                with gr.Row(equal_height=True):
-                    output_video_1 = gr.Video(
-                        label="Preprocessed video",
-                        interactive=False,
-                        autoplay=True,
-                        loop=True,
-                        show_share_button=True,
-                        scale=5,
-                    )
-                    output_video_2 = gr.Video(
-                        label="Generated Depth Video",
-                        interactive=False,
-                        autoplay=True,
-                        loop=True,
-                        show_share_button=True,
-                        scale=5,
-                    )
+                output_folder = gr.Textbox(label="Output Folder", placeholder="Path to save output images")
+                output_video_1 = gr.Gallery(
+                    label="Preprocessed images",
+                    interactive=False,
+                )
+                output_video_2 = gr.Gallery(
+                    label="Generated Depth Images",
+                    interactive=False,
+                )
 
-        with gr.Row(equal_height=True):
-            with gr.Column(scale=1):
-                with gr.Row(equal_height=False):
-                    with gr.Accordion("Advanced Settings", open=False):
-                        num_denoising_steps = gr.Slider(
-                            label="num denoising steps",
-                            minimum=1,
-                            maximum=25,
-                            value=25,
-                            step=1,
-                        )
-                        guidance_scale = gr.Slider(
-                            label="cfg scale",
-                            minimum=1.0,
-                            maximum=1.2,
-                            value=1.2,
-                            step=0.1,
-                        )
-                        max_res = gr.Slider(
-                            label="max resolution",
-                            minimum=512,
-                            maximum=2048,
-                            value=1024,
-                            step=64,
-                        )
-                        process_length = gr.Slider(
-                            label="process length",
-                            minimum=1,
-                            maximum=280,
-                            value=195,
-                            step=1,
-                        )
-                    generate_btn = gr.Button("Generate")
-            with gr.Column(scale=2):
-                pass
+        with gr.Row():
+            num_denoising_steps = gr.Slider(1, 50, value=25, step=1, label="Number of Inference Steps")
+            guidance_scale = gr.Slider(0.1, 10.0, value=1.2, step=0.1, label="Guidance Scale")
+
+        generate_btn = gr.Button("Generate Depth")
 
         gr.Examples(
             examples=examples,
             inputs=[
-                input_video,
+                input_folder,
                 num_denoising_steps,
                 guidance_scale,
-                max_res,
-                process_length,
             ],
             outputs=[output_video_1, output_video_2],
             fn=depthcrafter_demo.run,
@@ -122,11 +81,9 @@ def construct_demo():
         generate_btn.click(
             fn=depthcrafter_demo.run,
             inputs=[
-                input_video,
+                input_folder,
                 num_denoising_steps,
                 guidance_scale,
-                max_res,
-                process_length,
             ],
             outputs=[output_video_1, output_video_2],
         )

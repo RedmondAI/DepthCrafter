@@ -7,8 +7,7 @@ from diffusers.training_utils import set_seed
 
 from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
-from depthcrafter.utils import vis_sequence_depth, save_video, read_video_frames
-
+from depthcrafter.utils import vis_sequence_depth, save_video, read_video_frames, read_image_sequence, save_png_sequence
 
 class DepthCrafterDemo:
     def __init__(
@@ -52,12 +51,11 @@ class DepthCrafterDemo:
 
     def infer(
         self,
-        video: str,
+        image_folder: str,
         num_denoising_steps: int,
         guidance_scale: float,
         save_folder: str = "./demo_output",
         window_size: int = 110,
-        process_length: int = 195,
         overlap: int = 25,
         max_res: int = 1024,
         target_fps: int = 15,
@@ -67,10 +65,9 @@ class DepthCrafterDemo:
     ):
         set_seed(seed)
 
-        frames, target_fps = read_video_frames(
-            video, process_length, target_fps, max_res
-        )
-        print(f"==> video name: {video}, frames shape: {frames.shape}")
+        frames = read_image_sequence(image_folder, max_res)
+        process_length = len(frames)
+        print(f"==> image folder: {image_folder}, number of frames: {process_length}")
 
         # inference the depth map using the DepthCrafter pipeline
         with torch.inference_mode():
@@ -87,55 +84,49 @@ class DepthCrafterDemo:
             ).frames[0]
         # convert the three-channel output to a single channel depth map
         res = res.sum(-1) / res.shape[-1]
-        # normalize the depth map to [0, 1] across the whole video
+        # normalize the depth map to [0, 1] across the whole sequence
         res = (res - res.min()) / (res.max() - res.min())
         # visualize the depth map and save the results
         vis = vis_sequence_depth(res)
-        # save the depth map and visualization with the target FPS
+        # save the depth map and visualization as 16-bit PNGs
         save_path = os.path.join(
-            save_folder, os.path.splitext(os.path.basename(video))[0]
+            save_folder, os.path.basename(image_folder)
         )
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        if save_npz:
-            np.savez_compressed(save_path + ".npz", depth=res)
-        save_video(res, save_path + "_depth.mp4", fps=target_fps)
-        save_video(vis, save_path + "_vis.mp4", fps=target_fps)
-        save_video(frames, save_path + "_input.mp4", fps=target_fps)
+        save_png_sequence(res, save_path + "_depth", dtype=np.float16)
+        save_png_sequence(vis, save_path + "_vis", dtype=np.float16)
+        save_png_sequence(frames, save_path + "_input", dtype=np.float16)
         return [
-            save_path + "_input.mp4",
-            save_path + "_vis.mp4",
-            save_path + "_depth.mp4",
+            save_path + "_input",
+            save_path + "_vis",
+            save_path + "_depth",
         ]
 
     def run(
         self,
-        input_video,
+        input_folder,
         num_denoising_steps,
         guidance_scale,
         max_res=1024,
-        process_length=195,
     ):
+        frames = read_image_sequence(input_folder, max_res)
+        process_length = len(frames)
         res_path = self.infer(
-            input_video,
+            input_folder,
             num_denoising_steps,
             guidance_scale,
-            max_res=max_res,
             process_length=process_length,
         )
-        # clear the cache for the next video
+        # clear the cache for the next input
         gc.collect()
         torch.cuda.empty_cache()
         return res_path[:2]
 
-
 if __name__ == "__main__":
     # running configs
-    # the most important arguments for memory saving are `cpu_offload`, `enable_xformers`, `max_res`, and `window_size`
-    # the most important arguments for trade-off between quality and speed are
-    # `num_inference_steps`, `guidance_scale`, and `max_res`
     parser = argparse.ArgumentParser(description="DepthCrafter")
     parser.add_argument(
-        "--video-path", type=str, required=True, help="Path to the input video file(s)"
+        "--image-folder", type=str, required=True, help="Path to the input image sequence folder"
     )
     parser.add_argument(
         "--save-folder",
@@ -156,9 +147,6 @@ if __name__ == "__main__":
         help="Path to the pre-trained model",
     )
     parser.add_argument(
-        "--process-length", type=int, default=195, help="Number of frames to process"
-    )
-    parser.add_argument(
         "--cpu-offload",
         type=str,
         default="model",
@@ -166,8 +154,8 @@ if __name__ == "__main__":
         help="CPU offload option",
     )
     parser.add_argument(
-        "--target-fps", type=int, default=15, help="Target FPS for the output video"
-    )  # -1 for original fps
+        "--target-fps", type=int, default=15, help="Target FPS for the output"
+    )
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument(
         "--num-inference-steps", type=int, default=25, help="Number of inference steps"
@@ -188,23 +176,11 @@ if __name__ == "__main__":
         pre_train_path=args.pre_train_path,
         cpu_offload=args.cpu_offload,
     )
-    # process the videos, the video paths are separated by comma
-    video_paths = args.video_path.split(",")
-    for video in video_paths:
-        depthcrafter_demo.infer(
-            video,
-            args.num_inference_steps,
-            args.guidance_scale,
-            save_folder=args.save_folder,
-            window_size=args.window_size,
-            process_length=args.process_length,
-            overlap=args.overlap,
-            max_res=args.max_res,
-            target_fps=args.target_fps,
-            seed=args.seed,
-            track_time=args.track_time,
-            save_npz=args.save_npz,
-        )
-        # clear the cache for the next video
-        gc.collect()
-        torch.cuda.empty_cache()
+    depthcrafter_demo.run(
+        args.image_folder,
+        args.num_inference_steps,
+        args.guidance_scale,
+        max_res=args.max_res,
+    )
+    gc.collect()
+    torch.cuda.empty_cache()

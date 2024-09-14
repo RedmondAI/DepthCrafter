@@ -2,68 +2,37 @@ import numpy as np
 import cv2
 import matplotlib.cm as cm
 import torch
+import os
+from typing import List
 
-
-def read_video_frames(video_path, process_length, target_fps, max_res):
-    # a simple function to read video frames
-    cap = cv2.VideoCapture(video_path)
-    original_fps = cap.get(cv2.CAP_PROP_FPS)
-    original_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    original_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    # round the height and width to the nearest multiple of 64
-    height = round(original_height / 64) * 64
-    width = round(original_width / 64) * 64
-
-    # resize the video if the height or width is larger than max_res
-    if max(height, width) > max_res:
-        scale = max_res / max(original_height, original_width)
-        height = round(original_height * scale / 64) * 64
-        width = round(original_width * scale / 64) * 64
-
-    if target_fps < 0:
-        target_fps = original_fps
-
-    stride = max(round(original_fps / target_fps), 1)
-
+def read_image_sequence(folder_path: str, max_res: int):
+    image_files = sorted([
+        os.path.join(folder_path, img) for img in os.listdir(folder_path)
+        if img.lower().endswith(('.png', '.jpg', '.jpeg'))
+    ])
     frames = []
-    frame_count = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret or (process_length > 0 and frame_count >= process_length):
-            break
-        if frame_count % stride == 0:
-            frame = cv2.resize(frame, (width, height))
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
-            frames.append(frame.astype("float32") / 255.0)
-        frame_count += 1
-    cap.release()
-
+    for img_path in image_files:
+        img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+        if img.dtype != np.float32:
+            img = img.astype("float32") / 255.0
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        original_height, original_width = img.shape[:2]
+        scale = min(max_res / original_height, max_res / original_width, 1)
+        new_size = (int(original_width * scale), int(original_height * scale))
+        img = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA)
+        frames.append(img)
     frames = np.array(frames)
-    return frames, target_fps
+    return frames
 
-
-def save_video(
-    video_frames,
-    output_video_path,
-    fps: int = 15,
-) -> str:
-    # a simple function to save video frames
-    height, width = video_frames[0].shape[:2]
-    is_color = video_frames[0].ndim == 3
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    video_writer = cv2.VideoWriter(
-        output_video_path, fourcc, fps, (width, height), isColor=is_color
-    )
-
-    for frame in video_frames:
-        frame = (frame * 255).astype(np.uint8)
-        if is_color:
-            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        video_writer.write(frame)
-
-    video_writer.release()
-    return output_video_path
-
+def save_png_sequence(frames: np.ndarray, save_path_prefix: str, dtype=np.float16):
+    os.makedirs(os.path.dirname(save_path_prefix), exist_ok=True)
+    for idx, frame in enumerate(frames):
+        if dtype == np.float16:
+            frame_to_save = (frame * 65535).astype(np.uint16)
+        else:
+            frame_to_save = (frame * 255).astype(np.uint8)
+        cv2.imwrite(f"{save_path_prefix}_{idx:04d}.png", frame_to_save)
+    return save_path_prefix
 
 class ColorMapper:
     # a color mapper to map depth values to a certain colormap
