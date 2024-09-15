@@ -274,10 +274,6 @@ if __name__ == "__main__":
     gc.collect()
     torch.cuda.empty_cache()
 
-    if os.path.exists(args.save_folder):
-        shutil.rmtree(args.save_folder)
-    os.makedirs(args.save_folder, exist_ok=True)
-
     # Create high-quality mp4 from sorted PNGs
     import subprocess
     from glob import glob
