@@ -95,6 +95,7 @@ class DepthCrafterDemo:
         save_npz: bool = False,
         input_type: str = "video",
         original_sizes: List[tuple] = None,
+        max_frames: int = None,  # New argument
     ):
         set_seed(seed)
 
@@ -108,6 +109,10 @@ class DepthCrafterDemo:
             )
         else:
             raise ValueError(f"Unknown input type: {input_type}")
+
+        # Limit frames if max_frames is set
+        if max_frames is not None:
+            frames = frames[:max_frames]
 
         print("frame length: ", len(frames))
         # Determine process_length if not provided
@@ -134,7 +139,7 @@ class DepthCrafterDemo:
         # Normalize the depth map to [0, 1] across the whole sequence
         res = (res - res.min()) / (res.max() - res.min())
         # Visualize the depth map and save the results
-        vis = vis_sequence_depth(res)
+        # vis = vis_sequence_depth(res)
         # Save the depth map and visualization as 16-bit PNGs
         save_path = os.path.join(
             save_folder, os.path.basename(input_path)
@@ -222,6 +227,7 @@ if __name__ == "__main__":
     parser.add_argument("--max-res", type=int, default=1024, help="Maximum resolution")
     parser.add_argument("--save_npz", type=bool, default=True, help="Save npz file")
     parser.add_argument("--track_time", type=bool, default=False, help="Track time")
+    parser.add_argument("--max-frames", type=int, default=None, help="Maximum number of frames to process")  # New argument
 
     args = parser.parse_args()
 
@@ -253,6 +259,7 @@ if __name__ == "__main__":
             track_time=args.track_time,
             save_npz=args.save_npz,
             input_type=args.input_type,
+            max_frames=args.max_frames,  # Pass max_frames to infer method
         )
         # Clear the cache for the next input
         gc.collect()
@@ -267,9 +274,9 @@ if __name__ == "__main__":
     gc.collect()
     torch.cuda.empty_cache()
 
-    # Empty the output directory before running inference
-
-
+    if os.path.exists(args.save_folder):
+        shutil.rmtree(args.save_folder)
+    os.makedirs(args.save_folder, exist_ok=True)
 
     # Create high-quality mp4 from sorted PNGs
     import subprocess
