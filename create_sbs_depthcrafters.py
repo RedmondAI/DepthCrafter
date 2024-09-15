@@ -28,7 +28,8 @@ from PIL import Image
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--input_dir', type=str, help='Path to the directory containing input images')
+parser.add_argument('--input_rgb', type=str, help='Path to the directory containing RGB images')
+parser.add_argument('--input_depth', type=str, help='Path to the directory containing depth images')
 parser.add_argument('--output_dir', type=str, help='Path to the directory for output images')
 parser.add_argument('--deviation', type=int, default=20, help='How many pixels of deviation on a 1920x1080 image. Default is 20')
 parser.add_argument('--blur', type=int, default=10, help='How many pixels of blur on a 1920x1080 image. Default is 10')
@@ -53,7 +54,8 @@ extend_depth = args.extend_depth
 offset = args.offset
 gamma = args.gamma
 watermark = args.watermark
-input_dir = args.input_dir
+input_rgb = args.input_rgb
+input_depth = args.input_depth
 output_dir = args.output_dir
 
 # Printing the values of the variables
@@ -68,7 +70,8 @@ print(f"extend_depth: {extend_depth}")
 print(f"offset: {offset}")
 print(f"gamma: {gamma}")
 print(f"watermark: {watermark}")
-print(f"input_dir: {input_dir}")
+print(f"input_rgb: {input_rgb}")
+print(f"input_depth: {input_depth}")
 print(f"output_dir: {output_dir}")
 
 def resize_image(image, DESIRED_WIDTH, DESIRED_HEIGHT, interpolation=cv2.INTER_LINEAR_EXACT):
@@ -623,19 +626,15 @@ if __name__ == '__main__':
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
     
-    # Prepare input directories for RGB and depth images
-    rgb_dir = os.path.join(input_dir, 'rgb')
-    depth_dir = os.path.join(input_dir, 'depth')
-    
     # Get list of depth image files
-    depth_filenames = [f for f in os.listdir(depth_dir) if f.endswith('.png')]
+    depth_filenames = [f for f in os.listdir(input_depth) if f.endswith('.png')]
     depth_filenames.sort()
-    depth_filepaths = [os.path.join(depth_dir, f) for f in depth_filenames]
+    depth_filepaths = [os.path.join(input_depth, f) for f in depth_filenames]
     
     # Get list of RGB image files
-    rgb_filenames = [f for f in os.listdir(rgb_dir) if f.endswith('.png')]
+    rgb_filenames = [f for f in os.listdir(input_rgb) if f.endswith('.png')]
     rgb_filenames.sort()
-    rgb_filepaths = [os.path.join(rgb_dir, f) for f in rgb_filenames]
+    rgb_filepaths = [os.path.join(input_rgb, f) for f in rgb_filenames]
     
     # Ensure both directories have the same number of files
     assert len(depth_filepaths) == len(rgb_filepaths), "Mismatch between number of depth and RGB files."
