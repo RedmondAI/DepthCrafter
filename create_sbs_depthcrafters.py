@@ -611,8 +611,7 @@ def create_stereo_pair(file_pairs):
 
 if __name__ == '__main__':
 
-    print("show",args.show)
-    print("scene",args.scene)
+
     print("deviation",args.deviation)
     print("blur",args.blur)
     print("dilate",args.dilate)
