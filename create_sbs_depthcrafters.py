@@ -134,7 +134,7 @@ def extend_depth_map(normalized_depth, side, max_displacement):
     Extend the depth map to the left or right where pixels are brighter using GPU.
     """
     extended_depth = normalized_depth.copy()
-    max_displacement = int(max_displacement/4)
+    # max_displacement = int(max_displacement/4)
     inverse=True
     inverse=False
     
