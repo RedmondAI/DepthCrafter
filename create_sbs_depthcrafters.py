@@ -119,18 +119,18 @@ def create_quicktime(outdir):
     # Define the command
     command = [
         'ffmpeg', 
-        '-framerate', '30',  # Change this to the desired frame rate
+        '-framerate', '24',  # Set frame rate to 24fps
         '-pattern_type', 'glob', 
         '-i', os.path.join(outdir, '*.png'),  # Input files
         '-c:v', 'libx264',  # Video codec
         '-pix_fmt', 'yuv420p',  # Pixel format
-        '-crf', '25',  # Constant Rate Factor (lower is higher quality)
-        os.path.join(outdir, 'sbs.mp4')  # Output file
+        '-crf', '12',  # Lower CRF for higher quality (lower is better, 18 is visually lossless)
+        os.path.join(outdir, 'sbs_high_quality.mp4')  # Output file
     ]
 
     # Execute the command
     subprocess.run(command, check=True)
-    print("quicktime created",os.path.join(outdir, 'depth.mp4'))
+    print("QuickTime video created:", os.path.join(outdir, 'sbs_high_quality.mp4'))
 
 def extend_depth_map(normalized_depth, side, max_displacement):
     """
@@ -652,6 +652,9 @@ if __name__ == '__main__':
     
     # Process the images
     create_stereo_pair(file_pairs)
+
+    # Create a QuickTime video from the output PNGs
+    create_quicktime(output_dir)
 
 
     
