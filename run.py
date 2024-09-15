@@ -263,8 +263,7 @@ if __name__ == "__main__":
         frame_length = get_frame_length(input_path)
     except:
         frame_length = 1
-    print(f"Time taken: {end_time - start_time} seconds")
-    print("Time per frame: ", (end_time - start_time) / frame_length, " seconds")
+
     gc.collect()
     torch.cuda.empty_cache()
 
@@ -296,5 +295,8 @@ if __name__ == "__main__":
         "-c:v", "libx264",
         "-pix_fmt", "yuv420p",
         output_mp4
-    ])
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    print(f"Time taken: {end_time - start_time} seconds")
+    print("Time per frame: ", (end_time - start_time) / frame_length, " seconds")
 
