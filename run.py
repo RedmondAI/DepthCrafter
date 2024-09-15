@@ -95,7 +95,9 @@ class DepthCrafterDemo:
         save_npz: bool = False,
         input_type: str = "video",
         original_sizes: List[tuple] = None,
-        max_frames: int = None,  # New argument
+        max_frames: int = None,
+        clipping: str = "normal",  # New argument for clipping method
+        gamma_value: float = 0.5,  # Optional gamma value for gamma correction
     ):
         set_seed(seed)
 
@@ -134,20 +136,29 @@ class DepthCrafterDemo:
                 overlap=overlap,
                 track_time=track_time,
             ).frames[0]
+
         # Convert the three-channel output to a single channel depth map
         res = res.sum(-1) / res.shape[-1]
+
+        # Apply clipping based on the argument
+        if clipping == "gamma":
+            print(f"Applying gamma correction with gamma={gamma_value}")
+            res = np.power(res, gamma_value)
+        elif clipping == "log":
+            print("Applying logarithmic transformation")
+            res = np.log1p(res)
+        elif clipping != "normal":
+            raise ValueError(f"Unknown clipping method: {clipping}")
+
         # Normalize the depth map to [0, 1] across the whole sequence
         res = (res - res.min()) / (res.max() - res.min())
+
         # Visualize the depth map and save the results
-        # vis = vis_sequence_depth(res)
-        # Save the depth map and visualization as 16-bit PNGs
         save_path = os.path.join(
             save_folder, os.path.basename(input_path)
         )
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         save_png_sequence(res, save_path + "_depth", original_sizes, dtype=np.float16)
-        # save_png_sequence(vis, save_path + "_vis", original_sizes, dtype=np.float16)
-        # save_png_sequence(frames, save_path + "_input", original_sizes, dtype=np.float16)
         return [
             save_path + "_input",
         ]
@@ -228,6 +239,8 @@ if __name__ == "__main__":
     parser.add_argument("--save_npz", type=bool, default=True, help="Save npz file")
     parser.add_argument("--track_time", type=bool, default=False, help="Track time")
     parser.add_argument("--max-frames", type=int, default=None, help="Maximum number of frames to process")  # New argument
+    parser.add_argument("--clipping", type=str, default="normal", choices=["normal", "gamma", "log"], help="Clipping method")  # New argument
+    parser.add_argument("--gamma-value", type=float, default=0.5, help="Gamma value for gamma correction")  # New argument
 
     args = parser.parse_args()
 
@@ -260,6 +273,8 @@ if __name__ == "__main__":
             save_npz=args.save_npz,
             input_type=args.input_type,
             max_frames=args.max_frames,  # Pass max_frames to infer method
+            clipping=args.clipping,  # Pass clipping method to infer method
+            gamma_value=args.gamma_value,  # Pass gamma value to infer method
         )
         # Clear the cache for the next input
         gc.collect()
