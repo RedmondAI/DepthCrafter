@@ -511,10 +511,17 @@ def add_watermark(input_image, watermark_image_path="watermark_dropshadow_light.
 
     return input_image
 
-def process_file(depth_filename, rgb_filename, progress):
+def process_file(depth_filename, rgb_filename):
     try:
+        # Check if files exist
+        if not os.path.exists(depth_filename):
+            raise FileNotFoundError(f"Depth file not found: {depth_filename}")
+        if not os.path.exists(rgb_filename):
+            raise FileNotFoundError(f"RGB file not found: {rgb_filename}")
+
         frame = os.path.basename(rgb_filename)
         combined_output_file = os.path.join(output_dir, frame)
+        
         # Read the RGB image and resize it
         rgb_img = cv2.imread(rgb_filename)
         rgb_img = np.uint16(rgb_img) * 257
@@ -584,7 +591,6 @@ def process_file(depth_filename, rgb_filename, progress):
         cv2.imwrite(combined_output_file, combined_img)
 
         #print("elapsed time",elapsed_time)
-        progress.value += 1
     except Exception as e:
         import traceback
         print("Error occurred:", e)
@@ -594,16 +600,16 @@ def process_file(depth_filename, rgb_filename, progress):
 def create_stereo_pair(file_pairs):
     total_files = len(file_pairs)
     print("total number of image files", total_files)
+    
     # Initialize progress bar
     progress_bar = tqdm(total=total_files, unit='file', desc='Processing files', leave=True)
-    # Create a shared counter
-    with Manager() as manager:
-        progress = manager.Value('i', 0)  # 'i' denotes an integer
-        # Iterate over the file pairs
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(process_file, depth_file, rgb_file, progress) for depth_file, rgb_file in file_pairs]
-            for future in concurrent.futures.as_completed(futures):
-                progress_bar.update(progress.value - progress_bar.n)
+    
+    # Use ThreadPoolExecutor to avoid multiprocessing issues
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(process_file, depth_file, rgb_file) for depth_file, rgb_file in file_pairs]
+        for future in concurrent.futures.as_completed(futures):
+            progress_bar.update(1)  # Update progress bar for each completed task
+    
     progress_bar.close()
     print("Stereo pair creation process completed.")
 
