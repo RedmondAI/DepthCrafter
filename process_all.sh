@@ -7,6 +7,7 @@ input_dir=$1
 for dir in input_${input_dir}/*/; do
     # Remove trailing slash and extract directory name
     current_dir=$(basename "$dir")
+    echo "Processing directory: ${current_dir}"
 
     # Check if the output directory already exists
     if [ -d "${input_dir}_depth/${current_dir}_11-5-1400" ]; then
