@@ -39,14 +39,18 @@ def download_rgb_deflicker(root_prefix):
     if 'Contents' not in response:
         return
     root_folder = root_prefix.rstrip('/').split('/')[-1]
-    os.makedirs(os.path.join("input2", root_folder), exist_ok=True)
+
     for obj in response['Contents']:
         key = obj['Key']
         filename = os.path.basename(key)
-        local_path = os.path.join("input_"+root_prefix, root_folder, filename)
+        local_path = os.path.join(root_prefix+"_input", root_folder, filename)
         os.makedirs(os.path.dirname(local_path), exist_ok=True)
-        s3_client.download_file(S3_BUCKET_NAME, key, local_path)
-        print(f"Downloaded {key} to {local_path}")
+        
+        if not os.path.exists(local_path):
+            s3_client.download_file(S3_BUCKET_NAME, key, local_path)
+            print(f"Downloaded {key} to {local_path}")
+        else:
+            print(f"Skipped {key} as it already exists at {local_path}")
 
 def main():
     directories = list_directories(START_PREFIX)
