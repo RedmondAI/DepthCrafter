@@ -4,7 +4,7 @@
 input_dir=$1
 
 # Loop through each directory in input2/
-for dir in input_${input_dir}/*/; do
+for dir in ${input_dir}_input/*/; do
     # Remove trailing slash and extract directory name
     current_dir=$(basename "$dir")
     echo "Processing directory: ${dir}"
