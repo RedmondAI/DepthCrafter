@@ -44,6 +44,7 @@ def download_rgb_deflicker(root_prefix):
         key = obj['Key']
         filename = os.path.basename(key)
         local_path = os.path.join("input_"+root_prefix, root_folder, filename)
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
         s3_client.download_file(S3_BUCKET_NAME, key, local_path)
         print(f"Downloaded {key} to {local_path}")
 
