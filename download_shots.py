@@ -60,7 +60,7 @@ def main():
     args = parser.parse_args()
     directories = list_directories(args.start_prefix)
     for dir in directories:
-        print(dir)
+        print("dir", dir)
     with ThreadPoolExecutor(max_workers=8) as executor:
         futures = [executor.submit(download_rgb_deflicker, d) for d in directories]
         for future in as_completed(futures):
