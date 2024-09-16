@@ -10,7 +10,7 @@ S3_ACCESS_KEY = "283b8c4c028487ff3e1bbc2a891189e7"
 S3_SECRET_KEY = "bc3d3ee909929216aa16c764d85e9b743bbc91e2589295955bda9624d0afdd21"
 DEFAULT_ENDPOINT = "47ec7d0d5b6a6c2bcda5211d2d412fd0.r2.cloudflarestorage.com"
 S3_ROOT_URL = "https://pub-da6ae3cf12bc4de49e659943f4080da6.r2.dev/"
-START_PREFIX = "reel01/"
+#START_PREFIX = "reel01/"
 
 # Initialize S3 client
 s3_client = boto3.client(
