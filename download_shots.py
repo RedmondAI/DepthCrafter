@@ -32,12 +32,12 @@ def list_directories(prefix):
 
 def download_rgb_deflicker(root_prefix):
     print("root_prefix", root_prefix)
-    rgb_prefix = f"{root_prefix}rgb_deflicker/"
+    rgb_prefix = f"{root_prefix}/rgb_deflicker/"
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix=rgb_prefix)
     if 'Contents' not in response:
         return
     root_folder = root_prefix.rstrip('/').split('/')[-1]
-    os.makedirs(root_folder, exist_ok=True)
+    os.makedirs(os.path.join("input2", root_folder), exist_ok=True)
     for obj in response['Contents']:
         key = obj['Key']
         filename = os.path.basename(key)
@@ -49,7 +49,7 @@ def main():
     directories = list_directories(START_PREFIX)
     for dir in directories:
         print(dir)
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=1) as executor:
         futures = [executor.submit(download_rgb_deflicker, d) for d in directories]
         for future in as_completed(futures):
             future.result()
