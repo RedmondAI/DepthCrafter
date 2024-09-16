@@ -31,6 +31,7 @@ def list_directories(prefix):
     return directories
 
 def download_rgb_deflicker(root_prefix):
+    print("root_prefix", root_prefix)
     rgb_prefix = f"{root_prefix}rgb_deflicker/"
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix=rgb_prefix)
     if 'Contents' not in response:
@@ -46,6 +47,8 @@ def download_rgb_deflicker(root_prefix):
 
 def main():
     directories = list_directories(START_PREFIX)
+    for dir in directories:
+        print(dir)
     with ThreadPoolExecutor(max_workers=8) as executor:
         futures = [executor.submit(download_rgb_deflicker, d) for d in directories]
         for future in as_completed(futures):
