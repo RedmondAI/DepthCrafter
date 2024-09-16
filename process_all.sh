@@ -5,6 +5,12 @@ for dir in input2/*/; do
     # Remove trailing slash and extract directory name
     current_dir=$(basename "$dir")
 
+    # Check if the output directory already exists
+    if [ -d "output_depth/${current_dir}_12-5-1400" ]; then
+        echo "Skipping ${current_dir}, output already exists."
+        continue
+    fi
+
     # Run the first Python script
     python run.py --input-path "input2/${current_dir}" \
                   --input-type image_sequence \
