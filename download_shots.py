@@ -51,7 +51,7 @@ def main():
     directories = list_directories(START_PREFIX)
     for dir in directories:
         print(dir)
-    with ThreadPoolExecutor(max_workers=1) as executor:
+    with ThreadPoolExecutor(max_workers=8) as executor:
         futures = [executor.submit(download_rgb_deflicker, d) for d in directories]
         for future in as_completed(futures):
             future.result()
