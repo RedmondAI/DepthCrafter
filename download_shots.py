@@ -33,7 +33,9 @@ def list_directories(prefix):
 def download_rgb_deflicker(root_prefix):
     print("root_prefix", root_prefix)
     rgb_prefix = f"{root_prefix}/rgb_deflicker/"
+    print("rgb_prefix", rgb_prefix)
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix=rgb_prefix)
+    print("response", response)
     if 'Contents' not in response:
         return
     root_folder = root_prefix.rstrip('/').split('/')[-1]
