@@ -36,7 +36,7 @@ for dir in ${input_dir}_input/*/; do
 
     # Run the second Python script
     python create_sbs_depthcrafters.py --input_rgb "${input_dir}_input/${current_dir}" \
-                                       --input_depth "${input_dir}_depth/${current_dir}_12-5-1400" \
+                                       --input_depth "${input_dir}_depth/${current_dir}_11-5-1400" \
                                        --output_dir "${input_dir}_sbs/${current_dir}" \
                                        --deviation 14 \
                                        --blur 5 \
