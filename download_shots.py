@@ -1,6 +1,7 @@
 import os
 import boto3
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import argparse
 
 # S3 Configuration
 AWS_REGION = ""
@@ -54,7 +55,10 @@ def download_rgb_deflicker(root_prefix):
         print(f"Downloaded {key} to {local_path}")
 
 def main():
-    directories = list_directories(START_PREFIX)
+    parser = argparse.ArgumentParser(description='Download RGB deflicker files from S3')
+    parser.add_argument('--start_prefix', type=str, help='The prefix to start listing directories from')
+    args = parser.parse_args()
+    directories = list_directories(args.start_prefix)
     for dir in directories:
         print(dir)
     with ThreadPoolExecutor(max_workers=8) as executor:
