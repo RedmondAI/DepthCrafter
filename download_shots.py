@@ -43,7 +43,7 @@ def download_rgb_deflicker(root_prefix):
     for obj in response['Contents']:
         key = obj['Key']
         filename = os.path.basename(key)
-        local_path = os.path.join(root_prefix.replace("/","")+"_input", root_folder, filename)
+        local_path = os.path.join(START_PREFIX.replace("/","")+"_input", root_folder, filename)
         os.makedirs(os.path.dirname(local_path), exist_ok=True)
         
         if not os.path.exists(local_path):
