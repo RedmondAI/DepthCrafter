@@ -20,9 +20,9 @@ def combine_mp4s(directory):
                 # Create a temporary video with the folder name in the bottom left corner
                 temp_video_path = os.path.join(folder, f"temp_{folder_name}.mp4")
                 subprocess.run([
-                    "ffmpeg", "-i", video_path, "-vf", 
-                    f"drawtext=text='{folder_name}':fontcolor=yellow:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2",
-                    "-codec:v", "libx264", "-crf", "12", "-preset", "slow", "-codec:a", "copy", temp_video_path
+                    "ffmpeg", "-y", "-i", video_path, "-vf", 
+                    f"drawtext=text='{folder_name}':fontcolor=yellow:fontsize=48:x=10:y=h-th-10",
+                    "-codec:v", "libx264", "-crf", "18", "-preset", "slow", "-codec:a", "copy", temp_video_path
                 ])
                 
                 # Add the path of the temporary video to the list
@@ -30,7 +30,7 @@ def combine_mp4s(directory):
 
     # Combine all processed videos into a single large MP4 video
     output_video_path = os.path.join(directory, "combined_video.mp4")
-    subprocess.run(["ffmpeg", "-i", "concat:" + "|".join(processed_videos), "-c", "copy", output_video_path])
+    subprocess.run(["ffmpeg", "-y", "-i", "concat:" + "|".join(processed_videos), "-c", "copy", output_video_path])
 
     # Clean up temporary videos
     for video in processed_videos:
