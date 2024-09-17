@@ -25,7 +25,7 @@ for dir in ${input_dir}_input/*/; do
     if [[ "$justsbs" == false ]]; then
         python run.py --input-path "${input_dir}_input/${current_dir}" \
                       --input-type image_sequence \
-                      --save-folder "${input_dir}_depth2/${current_dir}_11-100-1400" \
+                      --save-folder "${input_dir}_depth/${current_dir}_11-100-1400" \
                       --guidance-scale 1.1 \
                       --max-res 1400 \
                       --window-size 100 \
@@ -36,8 +36,8 @@ for dir in ${input_dir}_input/*/; do
 
     # Run the second Python script
     python create_sbs_depthcrafters.py --input_rgb "${input_dir}_input/${current_dir}" \
-                                       --input_depth "${input_dir}_depth2/${current_dir}_11-100-1400" \
-                                       --output_dir "${input_dir}_sbs2/${current_dir}" \
+                                       --input_depth "${input_dir}_depth/${current_dir}_11-100-1400" \
+                                       --output_dir "${input_dir}_sbs/${current_dir}" \
                                        --deviation 15 \
                                        --blur 5 \
                                        --dilate 2 \
