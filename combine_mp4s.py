@@ -55,3 +55,6 @@ if __name__ == "__main__":
 
     directory = sys.argv[1]
     combine_mp4s(directory)
+
+# python create_sbs_depthcrafters.py --input_rgb "quietplace_input/scene_00030" --input_depth "quietplace_depth/scene_00030_11-5-1400" --output_dir "quietplace_sbs/scene_00030" --deviation 14 --blur 5 --dilate 2 --extend_depth 4 --max_workers 4
+# python run.py --input-path "quietplace_input/scene_00030" --input-type image_sequence --save-folder "quietplace_depth/scene_00030_11-5-1400" --guidance-scale 1.1 --max-res 1400 --window-size 100 --overlap 50 --num-inference-steps 35 --target-fps 24
