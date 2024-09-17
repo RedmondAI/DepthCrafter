@@ -18,14 +18,14 @@ def combine_mp4s(directory):
                 folder_name = os.path.basename(folder)
                 
                 # Create a temporary video with the folder name in the bottom left corner
-                temp_video_path = os.path.join(folder, f"temp_{folder_name}.mp4")
+                temp_video_path = os.path.abspath(os.path.join(folder, f"temp_{folder_name}.mp4"))  # Changed to absolute path
                 
                 # Check if the temporary video already exists
                 if not os.path.exists(temp_video_path):
                     subprocess.run([
                         "ffmpeg", "-y", "-i", video_path, "-vf", 
                         f"drawtext=text='{folder_name}':fontcolor=yellow:fontsize=48:x=10:y=h-th-10",
-                        "-codec:v", "libx264", "-crf", "18", "-preset", "slow", "-codec:a", "copy", temp_video_path
+                        "-codec:v", "libx264", "-crf", "12", "-preset", "slow", "-codec:a", "copy", temp_video_path
                     ])
                 
                 # Add the path of the temporary video to the list
@@ -44,9 +44,9 @@ def combine_mp4s(directory):
     ])
 
     # Clean up temporary videos and concat list
-    for video in processed_videos:
-        os.remove(video)
-    os.remove(concat_list_path)
+    # for video in processed_videos:
+    #     os.remove(video)
+    # os.remove(concat_list_path)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
