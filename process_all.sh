@@ -30,7 +30,7 @@ for dir in ${input_dir}_input/*/; do
                       --max-res 1400 \
                       --window-size 100 \
                       --overlap 50 \
-                      --num-inference-steps 5 \
+                      --num-inference-steps 100 \
                       --target-fps 24
     fi
 
