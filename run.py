@@ -18,6 +18,22 @@ from depthcrafter.utils import (
     get_frame_length,
 )
 
+def create_quicktime(outdir):
+    # Define the command
+    command = [
+        'ffmpeg', 
+        '-framerate', '24',  # Set frame rate to 24fps
+        '-pattern_type', 'glob', 
+        '-i', os.path.join(outdir, '*.png'),  # Input files
+        '-c:v', 'libx264',  # Video codec
+        '-pix_fmt', 'yuv420p',  # Pixel format
+        '-crf', '12',  # Lower CRF for higher quality (lower is better, 18 is visually lossless)
+        os.path.join(outdir, 'depth.mp4')  # Output file
+    ]
+
+    # Execute the command
+    subprocess.run(command, check=True)
+    print("QuickTime video created:", os.path.join(outdir, 'sbs_high_quality.mp4'))
 
 class DepthCrafterDemo:
     def __init__(
@@ -225,4 +241,5 @@ if __name__ == "__main__":
     gc.collect()
     torch.cuda.empty_cache()
 
+    create_quicktime(args.save_folder)
     # The rest of your script (e.g., video creation with ffmpeg) remains unchanged
