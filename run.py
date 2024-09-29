@@ -196,6 +196,11 @@ if __name__ == "__main__":
         default=999999999,
         help="Ending frame index (inclusive)",
     )
+    parser.add_argument(
+        "--create-quicktime",
+        action="store_true",
+        help="Create a QuickTime video from the output frames",
+    )
 
     args = parser.parse_args()
 
@@ -241,5 +246,6 @@ if __name__ == "__main__":
     gc.collect()
     torch.cuda.empty_cache()
 
-    create_quicktime(args.save_folder)
+    if args.create_quicktime:
+        create_quicktime(args.save_folder)
     # The rest of your script (e.g., video creation with ffmpeg) remains unchanged
