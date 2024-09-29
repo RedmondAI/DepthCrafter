@@ -107,6 +107,23 @@ def vis_sequence_depth(depths: np.ndarray, v_min=None, v_max=None):
     res = visualizer.apply(torch.tensor(depths), v_min=v_min, v_max=v_max).numpy()
     return res
 
+def get_frame_length(video_path: str) -> int:
+    """
+    Retrieves the total number of frames in a video file.
+
+    Args:
+        video_path (str): Path to the video file.
+
+    Returns:
+        int: Total number of frames.
+    """
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise IOError(f"Cannot open video file {video_path}")
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    cap.release()
+    return frame_count
+
 def read_image_sequence_frames(image_sequence_path, process_length, target_fps, max_res):
     # Get a sorted list of image file paths
     supported_formats = ('*.png', '*.jpg', '*.jpeg', '*.bmp', '*.tiff')
