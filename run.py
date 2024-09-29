@@ -62,7 +62,6 @@ class DepthCrafterDemo:
         guidance_scale: float,
         save_folder: str = "./demo_output",
         window_size: int = 110,
-        process_length: int = None,
         overlap: int = 25,
         max_res: int = 1024,
         target_fps: int = 15,
@@ -78,7 +77,7 @@ class DepthCrafterDemo:
 
         if input_type == "video":
             frames, target_fps = read_video_frames(
-                input_path, process_length, target_fps, max_res
+                input_path, target_fps, max_res, start_frame, end_frame
             )
         elif input_type == "image_sequence":
             frames, original_sizes = read_image_sequence(
@@ -88,11 +87,6 @@ class DepthCrafterDemo:
             raise ValueError(f"Unknown input type: {input_type}")
 
         print("Frame length: ", len(frames))
-        # Determine process_length if not provided
-        if process_length is None:
-            process_length = len(frames)
-
-        print(f"==> Input path: {input_path}, frames shape: {frames.shape}")
 
         # Inference the depth map using the DepthCrafter pipeline
         with torch.inference_mode():
@@ -120,31 +114,6 @@ class DepthCrafterDemo:
         return [
             save_path + "_input",
         ]
-
-    def run(
-        self,
-        input_folder,
-        num_denoising_steps,
-        guidance_scale,
-        max_res=1024,
-        start_frame=0,
-        end_frame=999999999,
-    ):
-        frames, original_sizes = read_image_sequence(
-            input_folder, max_res, start_frame, end_frame
-        )  # Capture original sizes
-        process_length = len(frames)
-        res_path = self.infer(
-            input_folder,
-            num_denoising_steps,
-            guidance_scale,
-            process_length=None,
-            original_sizes=original_sizes,
-            start_frame=start_frame,
-            end_frame=end_frame,
-        )
-        gc.collect()
-        return res_path[:2]
 
 
 if __name__ == "__main__":
@@ -200,12 +169,6 @@ if __name__ == "__main__":
     parser.add_argument("--save_npz", type=bool, default=True, help="Save npz file")
     parser.add_argument("--track_time", type=bool, default=False, help="Track time")
     parser.add_argument(
-        "--process-length",
-        type=int,
-        default=100,
-        help="Number of frames to process",
-    )
-    parser.add_argument(
         "--start-frame",
         type=int,
         default=0,
@@ -240,7 +203,6 @@ if __name__ == "__main__":
             args.guidance_scale,
             save_folder=args.save_folder,
             window_size=args.window_size,
-            process_length=args.process_length,
             overlap=args.overlap,
             max_res=args.max_res,
             target_fps=args.target_fps,

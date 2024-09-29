@@ -147,3 +147,70 @@ def read_image_sequence_frames(image_sequence_path, process_length, target_fps, 
 
     frames = np.array(frames)
     return frames, target_fps
+
+def read_video_frames(
+    video_path: str,
+    target_fps: int,
+    max_res: int,
+    start_frame: int = 0,
+    end_frame: int = 999999999,
+) -> Tuple[np.ndarray, int]:
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise IOError(f"Cannot open video file {video_path}")
+
+    # Get original FPS of the video
+    original_fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # Adjust end_frame if it exceeds the total number of frames
+    end_frame = min(end_frame, frame_count - 1)
+
+    # Calculate frame interval for FPS adjustment
+    frame_interval = max(1, int(round(original_fps / target_fps)))
+
+    frames = []
+    current_frame_idx = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Skip frames before start_frame
+        if current_frame_idx < start_frame:
+            current_frame_idx += 1
+            continue
+
+        # Stop if we've reached the end_frame
+        if current_frame_idx > end_frame:
+            break
+
+        # Downsample FPS by skipping frames
+        if (current_frame_idx - start_frame) % frame_interval != 0:
+            current_frame_idx += 1
+            continue
+
+        original_height, original_width = frame.shape[:2]
+
+        # Resize frame if necessary
+        if max(original_height, original_width) > max_res:
+            scale = max_res / max(original_height, original_width)
+            height = int(round(original_height * scale / 64) * 64)
+            width = int(round(original_width * scale / 64) * 64)
+        else:
+            height = int(round(original_height / 64) * 64)
+            width = int(round(original_width / 64) * 64)
+
+        # Ensure dimensions are at least 64
+        height = max(height, 64)
+        width = max(width, 64)
+
+        frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frames.append(frame.astype('uint8'))
+
+        current_frame_idx += 1
+
+    cap.release()
+    frames = np.array(frames, dtype=np.uint8)
+    return frames, target_fps
