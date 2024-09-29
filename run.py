@@ -89,6 +89,7 @@ class DepthCrafterDemo:
         original_sizes: List[tuple] = None,
         start_frame: int = 0,
         end_frame: int = 999999999,
+        gain: float = 1.0,  # Add this line
     ):
         set_seed(seed)
 
@@ -102,6 +103,9 @@ class DepthCrafterDemo:
             )
         else:
             raise ValueError(f"Unknown input type: {input_type}")
+
+        # Apply gain and clamp to 16-bit range
+        frames = np.clip(frames * gain, 0, 65535).astype(np.uint16)
 
         print("Frame length: ", len(frames))
 
@@ -202,6 +206,7 @@ if __name__ == "__main__":
         action="store_true",
         help="Create a QuickTime video from the output frames",
     )
+    parser.add_argument("--gain", type=float, default=1.0, help="Gain to apply to input images (default: 1.0)")
 
     args = parser.parse_args()
 
@@ -233,6 +238,7 @@ if __name__ == "__main__":
             input_type=args.input_type,
             start_frame=args.start_frame,
             end_frame=args.end_frame,
+            gain=args.gain,  # Add this line
         )
         # Clear the cache for the next input
         gc.collect()
