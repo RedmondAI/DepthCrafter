@@ -14,17 +14,17 @@ from depthcrafter.utils import vis_sequence_depth, read_image_sequence, save_png
 
 
 def read_video_frames(input_path, process_length, target_fps, max_res):
-    # Placeholder implementation for reading video frames
-    # You need to replace this with actual video reading logic
     import cv2
 
     cap = cv2.VideoCapture(input_path)
     frames = []
-    while True:
+    frame_count = 0
+    while frame_count < process_length:
         ret, frame = cap.read()
         if not ret:
             break
         frames.append(frame)
+        frame_count += 1
     cap.release()
     frames = np.array(frames)
     return frames, target_fps
@@ -209,6 +209,12 @@ if __name__ == "__main__":
     parser.add_argument("--max-res", type=int, default=1024, help="Maximum resolution")
     parser.add_argument("--save_npz", type=bool, default=True, help="Save npz file")
     parser.add_argument("--track_time", type=bool, default=False, help="Track time")
+    parser.add_argument(
+        "--process-length",
+        type=int,
+        default=100,
+        help="Number of frames to process"
+    )
 
     args = parser.parse_args()
 
@@ -232,7 +238,7 @@ if __name__ == "__main__":
             args.guidance_scale,
             save_folder=args.save_folder,
             window_size=args.window_size,
-            process_length=None,  # Pass None to infer method
+            process_length=args.process_length,
             overlap=args.overlap,
             max_res=args.max_res,
             target_fps=args.target_fps,
