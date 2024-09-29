@@ -89,7 +89,7 @@ class DepthCrafterDemo:
         original_sizes: List[tuple] = None,
         start_frame: int = 0,
         end_frame: int = 999999999,
-        gain: float = 1.0,  # Add this line
+        gain: float = 1.0,
     ):
         set_seed(seed)
 
@@ -99,13 +99,10 @@ class DepthCrafterDemo:
             )
         elif input_type == "image_sequence":
             frames, original_sizes = read_image_sequence(
-                input_path, max_res, start_frame, end_frame
+                input_path, max_res, start_frame, end_frame, gain
             )
         else:
             raise ValueError(f"Unknown input type: {input_type}")
-
-        # Apply gain and clamp to 16-bit range
-        frames = np.clip(frames * gain, 0, 65535).astype(np.uint16)
 
         print("Frame length: ", len(frames))
 
@@ -238,7 +235,7 @@ if __name__ == "__main__":
             input_type=args.input_type,
             start_frame=args.start_frame,
             end_frame=args.end_frame,
-            gain=args.gain,  # Add this line
+            gain=args.gain,
         )
         # Clear the cache for the next input
         gc.collect()

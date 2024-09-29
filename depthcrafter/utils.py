@@ -11,6 +11,7 @@ def read_image_sequence(
     max_res: int,
     start_frame: int = 0,
     end_frame: int = 999999999,
+    gain: float = 1.0,
 ) -> Tuple[np.ndarray, List[Tuple[int, int]]]:
     image_files = sorted(
         [
@@ -41,6 +42,9 @@ def read_image_sequence(
         else:
             print(f"Warning: Unexpected image dtype {img.dtype} in {img_path}, skipping.")
             continue
+
+        # Apply gain and clamp to [0.0, 1.0]
+        img = np.clip(img * gain, 0.0, 1.0)
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
