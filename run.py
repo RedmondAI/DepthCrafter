@@ -7,6 +7,7 @@ from diffusers.training_utils import set_seed
 import time
 from typing import List
 import shutil
+import subprocess
 
 from depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 from depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
