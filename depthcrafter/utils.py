@@ -6,11 +6,23 @@ import torch
 import os
 from typing import List, Tuple
 
-def read_image_sequence(folder_path: str, max_res: int) -> Tuple[np.ndarray, List[Tuple[int, int]]]:
-    image_files = sorted([
-        os.path.join(folder_path, img) for img in os.listdir(folder_path)
-        if img.lower().endswith(('.png', '.jpg', '.jpeg'))
-    ])
+def read_image_sequence(
+    folder_path: str,
+    max_res: int,
+    start_frame: int = 0,
+    end_frame: int = 999999999,
+) -> Tuple[np.ndarray, List[Tuple[int, int]]]:
+    image_files = sorted(
+        [
+            os.path.join(folder_path, img)
+            for img in os.listdir(folder_path)
+            if img.lower().endswith(('.png', '.jpg', '.jpeg'))
+        ]
+    )
+
+    # Slice the list of image files using start_frame and end_frame
+    image_files = image_files[start_frame : end_frame + 1]
+
     frames = []
     original_sizes = []
     for img_path in image_files:
