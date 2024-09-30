@@ -5,6 +5,7 @@ import matplotlib.cm as cm
 import torch
 import os
 from typing import List, Tuple
+from cv2 import fastNlMeansDenoisingColored
 
 def read_image_sequence(
     folder_path: str,
@@ -12,6 +13,7 @@ def read_image_sequence(
     start_frame: int = 0,
     end_frame: int = 999999999,
     gain: float = 1.0,
+    denoise: bool = False,
 ) -> Tuple[np.ndarray, List[Tuple[int, int]]]:
     image_files = sorted(
         [
@@ -45,6 +47,17 @@ def read_image_sequence(
 
         # Apply gain and clamp to [0.0, 1.0]
         img = np.clip(img * gain, 0.0, 1.0)
+
+        # Apply denoising if requested
+        if denoise:
+            img = fastNlMeansDenoisingColored(
+                (img * 255).astype(np.uint8),
+                None,
+                10,
+                10,
+                7,
+                21
+            ).astype(np.float32) / 255.0
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
